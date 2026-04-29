@@ -77,6 +77,14 @@ document.addEventListener('DOMContentLoaded', function () {
             // TODO: META PIXEL STANDARD EVENT – AddToCart
             // Fire AddToCart when a user clicks "Add to Cart".
             // ================================================================
+            fbq('track', 'AddToCart', {
+                content_ids:  [contentId],
+                content_type: 'product',
+                contents:     [{ id: contentId, quantity: 1 }],
+                content_name: contentName,
+                currency:     'USD',
+                value:        price
+            });
         });
     });
 
