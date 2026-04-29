@@ -63,20 +63,14 @@ loadCartFromLocalStorage();
 document.addEventListener('DOMContentLoaded', function () {
 
     // ── Add to Cart buttons (index.html & products.html) ─────────────────────
-    // Each button carries data-id, data-name, and data-price attributes.
     document.querySelectorAll('.add-to-cart-btn').forEach(function (btn) {
         btn.addEventListener('click', function () {
             const contentId   = btn.dataset.id;
             const contentName = btn.dataset.name;
             const price       = parseFloat(btn.dataset.price);
 
-            // Update cart state
             addToCart(contentName, price);
 
-            // ================================================================
-            // TODO: META PIXEL STANDARD EVENT – AddToCart
-            // Fire AddToCart when a user clicks "Add to Cart".
-            // ================================================================
             fbq('track', 'AddToCart', {
                 content_ids:  [contentId],
                 content_type: 'product',
@@ -101,7 +95,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // ================================================================
             // TODO: META PIXEL STANDARD EVENT – InitiateCheckout
-            // Fire InitiateCheckout when the user clicks "Proceed to Checkout".
             // ================================================================
             // fbq('track', 'InitiateCheckout', {
             //     content_ids: contentIds,
@@ -124,6 +117,20 @@ document.addEventListener('DOMContentLoaded', function () {
         purchaseBtn.addEventListener('click', function () {
             syncCheckoutFormFields();
 
+            const contents   = buildContents();
+            const contentIds = contents.map(c => c.id);
+            const numItems   = Object.values(cart).reduce((a, i) => a + i.quantity, 0);
+            const total      = getCartTotal();
+
+            // Save order data to sessionStorage so the Purchase event on the
+            // confirmation page has access to it after the cart is cleared.
+            sessionStorage.setItem('lastOrder', JSON.stringify({
+                contents:   contents,
+                contentIds: contentIds,
+                numItems:   numItems,
+                total:      total
+            }));
+
             // Clear cart and redirect to confirmation page.
             // Purchase event fires on purchase-confirmation.html on page load.
             cart = {};
@@ -134,23 +141,18 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ── Confirmation page (purchase-confirmation.html) ────────────────────────
-    // Purchase is fired here on page load — this ensures only real confirmed
-    // orders are counted, not just button clicks that may fail at payment.
+    // Purchase fires here on page load. Order data is read from sessionStorage
+    // because the cart has already been cleared before the redirect.
     if (document.querySelector('.confirmation-card')) {
-
-        // ====================================================================
-        // TODO: META PIXEL STANDARD EVENT – Purchase
-        // Fire Purchase on page load of the confirmation page.
-        // Retrieve order value and contents from sessionStorage if needed.
-        // ====================================================================
+        const order = JSON.parse(sessionStorage.getItem('lastOrder') || '{}');
 
         fbq('track', 'Purchase', {
-            content_ids:  contentIds,
+            content_ids:  order.contentIds  || [],
             content_type: 'product',
-            contents:     contents,
+            contents:     order.contents    || [],
             currency:     'USD',
-            num_items:    numItems,
-            value:        total
+            num_items:    order.numItems    || 0,
+            value:        order.total       || 0.00
         });
     }
 
@@ -160,7 +162,6 @@ document.addEventListener('DOMContentLoaded', function () {
 // Cart helpers
 // =============================================================================
 
-/** Build a contents array from the current cart for Pixel event payloads. */
 function buildContents() {
     return Object.keys(cart).map(function (name) {
         return {
@@ -170,7 +171,6 @@ function buildContents() {
     });
 }
 
-/** Add an item to the cart and show a notification. */
 function addToCart(name, price) {
     if (cart[name]) {
         cart[name].quantity++;
@@ -182,19 +182,17 @@ function addToCart(name, price) {
     saveCartToLocalStorage();
 }
 
-/** Remove an item from the cart. */
 function removeFromCart(name) {
     delete cart[name];
     updateCartCount();
     saveCartToLocalStorage();
-    displayCartTable(); // refresh table if on cart page
+    displayCartTable();
 }
 
 // =============================================================================
 // Page-specific render functions
 // =============================================================================
 
-/** Render the cart table on cart.html. */
 function displayCartTable() {
     const tbody = document.getElementById('cart-body');
     if (!tbody) return;
@@ -219,7 +217,6 @@ function displayCartTable() {
     if (totalEl) totalEl.textContent = getCartTotal().toFixed(2);
 }
 
-/** Render the order summary table on checkout.html. */
 function displayCartSummary() {
     const tbody = document.getElementById('cart-summary-body');
     if (!tbody) return;
@@ -238,9 +235,7 @@ function displayCartSummary() {
     if (totalEl) totalEl.textContent = getCartTotal().toFixed(2);
 }
 
-/** Keep user PII variables in sync with the checkout form inputs. */
 function syncCheckoutFormFields() {
-    // These variables are available globally for use in Pixel advanced matching.
     window.userEmail = (document.getElementById('email') || {}).value || '';
     window.userName  = (document.getElementById('name')  || {}).value || '';
     window.userCity  = (document.getElementById('city')  || {}).value || '';
