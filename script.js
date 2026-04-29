@@ -145,7 +145,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // because the cart has already been cleared before the redirect.
     if (document.querySelector('.confirmation-card')) {
         const order = JSON.parse(sessionStorage.getItem('lastOrder') || '{}');
-
         fbq('track', 'Purchase', {
             content_ids:  order.contentIds  || [],
             content_type: 'product',
