@@ -143,15 +143,15 @@ document.addEventListener('DOMContentLoaded', function () {
         // Fire Purchase on page load of the confirmation page.
         // Retrieve order value and contents from sessionStorage if needed.
         // ====================================================================
-        fbq('track', 'Purchase', {
-            content_ids:  [],   // TODO: populate from sessionStorage
-            content_type: 'product',
-            contents:     [],   // TODO: populate from sessionStorage
-            currency:     'USD',
-            num_items:    0,    // TODO: populate from sessionStorage
-            value:        0.00  // TODO: populate from sessionStorage
-        });
 
+        fbq('track', 'Purchase', {
+            content_ids:  contentIds,
+            content_type: 'product',
+            contents:     contents,
+            currency:     'USD',
+            num_items:    numItems,
+            value:        total
+        });
     }
 
 });
