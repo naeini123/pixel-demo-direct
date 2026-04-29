@@ -124,30 +124,33 @@ document.addEventListener('DOMContentLoaded', function () {
         purchaseBtn.addEventListener('click', function () {
             syncCheckoutFormFields();
 
-            const contents   = buildContents();
-            const contentIds = contents.map(c => c.id);
-            const numItems   = Object.values(cart).reduce((a, i) => a + i.quantity, 0);
-            const total      = getCartTotal();
-
-            // ================================================================
-            // TODO: META PIXEL STANDARD EVENT – Purchase
-            // Fire Purchase when the user completes the order.
-            // ================================================================
-            // fbq('track', 'Purchase', {
-            //     content_ids:  contentIds,
-            //     content_type: 'product',
-            //     contents:     contents,
-            //     currency:     'USD',
-            //     num_items:    numItems,
-            //     value:        total
-            // });
-
-            // Clear cart and redirect to confirmation page
+            // Clear cart and redirect to confirmation page.
+            // Purchase event fires on purchase-confirmation.html on page load.
             cart = {};
             saveCartToLocalStorage();
             updateCartCount();
             window.location.href = 'purchase-confirmation.html';
         });
+    }
+
+    // ── Confirmation page (purchase-confirmation.html) ────────────────────────
+    // Purchase is fired here on page load — this ensures only real confirmed
+    // orders are counted, not just button clicks that may fail at payment.
+    if (document.querySelector('.confirmation-card')) {
+
+        // ====================================================================
+        // TODO: META PIXEL STANDARD EVENT – Purchase
+        // Fire Purchase on page load of the confirmation page.
+        // Retrieve order value and contents from sessionStorage if needed.
+        // ====================================================================
+        // fbq('track', 'Purchase', {
+        //     content_ids:  [],   // TODO: populate from sessionStorage
+        //     content_type: 'product',
+        //     contents:     [],   // TODO: populate from sessionStorage
+        //     currency:     'USD',
+        //     num_items:    0,    // TODO: populate from sessionStorage
+        //     value:        0.00  // TODO: populate from sessionStorage
+        // });
     }
 
 });
